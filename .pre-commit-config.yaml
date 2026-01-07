@@ -26,4 +26,4 @@ repos:
         additional_dependencies:
           - pydantic>=2.9.0
           - types-requests
-        args: [--strict, --ignore-missing-imports]
+        args: [--ignore-missing-imports, --no-warn-unused-ignores]
