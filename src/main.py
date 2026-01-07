@@ -52,9 +52,9 @@ except ValueError:
     # Metrics already registered (hot-reload scenario)
     from prometheus_client import REGISTRY
 
-    REQUEST_COUNT = REGISTRY._names_to_collectors["inference_requests_total"]
-    REQUEST_DURATION = REGISTRY._names_to_collectors["inference_request_duration_seconds"]
-    GENERATION_TOKENS = REGISTRY._names_to_collectors["generated_tokens_total"]
+    REQUEST_COUNT = REGISTRY._names_to_collectors["inference_requests_total"]  # type: ignore[assignment]
+    REQUEST_DURATION = REGISTRY._names_to_collectors["inference_request_duration_seconds"]  # type: ignore[assignment]
+    GENERATION_TOKENS = REGISTRY._names_to_collectors["generated_tokens_total"]  # type: ignore[assignment]
 
 # Rate limiter
 limiter = Limiter(key_func=get_remote_address)

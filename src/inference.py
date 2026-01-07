@@ -40,7 +40,7 @@ class InferenceEngine:
                 cache_dir=str(cache_dir),
             )
 
-            self.model = AutoModelForCausalLM.from_pretrained(
+            self.model = AutoModelForCausalLM.from_pretrained(  # type: ignore[assignment]
                 self.settings.model_name,
                 cache_dir=str(cache_dir),
                 torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
@@ -49,7 +49,7 @@ class InferenceEngine:
             if self.device == "cuda" and self.model is not None:
                 self.model = self.model.to(self.device)
 
-            self.generator = pipeline(
+            self.generator = pipeline(  # type: ignore[assignment]
                 "text-generation",
                 model=self.model,
                 tokenizer=self.tokenizer,
