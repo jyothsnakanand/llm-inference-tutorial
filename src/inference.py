@@ -46,7 +46,7 @@ class InferenceEngine:
                 torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
             )
 
-            if self.device == "cuda":
+            if self.device == "cuda" and self.model is not None:
                 self.model = self.model.to(self.device)
 
             self.generator = pipeline(

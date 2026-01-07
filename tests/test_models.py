@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from src.models import GenerateRequest, GenerateResponse, GeneratedText, HealthResponse
+from src.models import GeneratedText, GenerateRequest, GenerateResponse, HealthResponse
 
 
 def test_generate_request_valid() -> None:

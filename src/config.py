@@ -35,9 +35,7 @@ class Settings(BaseSettings):
     top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling")
 
     # Rate Limiting
-    rate_limit_requests: int = Field(
-        default=10, ge=1, description="Requests per time period"
-    )
+    rate_limit_requests: int = Field(default=10, ge=1, description="Requests per time period")
     rate_limit_period: int = Field(default=60, ge=1, description="Time period in seconds")
 
     # Performance

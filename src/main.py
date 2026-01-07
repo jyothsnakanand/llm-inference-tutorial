@@ -3,8 +3,8 @@
 import logging
 import sys
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
@@ -18,9 +18,9 @@ from src.config import Settings, get_settings
 from src.inference import InferenceEngine
 from src.models import (
     ErrorResponse,
+    GeneratedText,
     GenerateRequest,
     GenerateResponse,
-    GeneratedText,
     HealthResponse,
 )
 
@@ -51,6 +51,7 @@ try:
 except ValueError:
     # Metrics already registered (hot-reload scenario)
     from prometheus_client import REGISTRY
+
     REQUEST_COUNT = REGISTRY._names_to_collectors["inference_requests_total"]
     REQUEST_DURATION = REGISTRY._names_to_collectors["inference_request_duration_seconds"]
     GENERATION_TOKENS = REGISTRY._names_to_collectors["generated_tokens_total"]
@@ -63,7 +64,7 @@ engine: InferenceEngine | None = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Manage application lifecycle."""
     global engine
     settings = get_settings()
@@ -91,7 +92,7 @@ app.state.limiter = limiter
 
 
 @app.exception_handler(RateLimitExceeded)
-async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+async def rate_limit_handler(_request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """Handle rate limit exceeded errors."""
     return JSONResponse(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -100,7 +101,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONRe
 
 
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def global_exception_handler(_request: Request, exc: Exception) -> JSONResponse:
     """Handle all unhandled exceptions."""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return JSONResponse(
@@ -185,16 +186,16 @@ async def generate_text(
         )
 
         generated_texts = [
-            GeneratedText(text=r["text"], tokens=r["tokens"]) for r in results
+            GeneratedText(text=str(r["text"]), tokens=int(r["tokens"])) for r in results
         ]
 
-        total_tokens = sum(r["tokens"] for r in results)
+        total_tokens = sum(int(r["tokens"]) for r in results)
         GENERATION_TOKENS.inc(total_tokens)
 
         response = GenerateResponse(
             generated=generated_texts,
             model=settings.model_name,
-            prompt_tokens=results[0]["prompt_tokens"],
+            prompt_tokens=int(results[0]["prompt_tokens"]),
         )
 
         REQUEST_COUNT.labels(endpoint="/generate", status="success").inc()
