@@ -48,8 +48,8 @@ def test_inference_engine_is_loaded() -> None:
     assert not engine.is_loaded()
 
     # Set model and tokenizer
-    engine.model = MagicMock()
-    engine.tokenizer = MagicMock()
+    engine.model = MagicMock()  # type: ignore[assignment]
+    engine.tokenizer = MagicMock()  # type: ignore[assignment]
 
     # Now loaded
     assert engine.is_loaded()
@@ -60,7 +60,7 @@ def test_inference_engine_is_loaded() -> None:
 
     # Only tokenizer
     engine.model = None
-    engine.tokenizer = MagicMock()
+    engine.tokenizer = MagicMock()  # type: ignore[assignment]
     assert not engine.is_loaded()
 
 
@@ -136,9 +136,7 @@ def test_inference_engine_generate_with_mocked_model(
     mock_model.from_pretrained.return_value = MagicMock()
 
     mock_generator = MagicMock()
-    mock_generator.return_value = [
-        {"generated_text": "Once upon a time there was a brave knight"}
-    ]
+    mock_generator.return_value = [{"generated_text": "Once upon a time there was a brave knight"}]
     mock_pipeline.return_value = mock_generator
 
     # Load model
@@ -225,4 +223,6 @@ def test_inference_engine_generate_real() -> None:
     assert "text" in results[0]
     assert "tokens" in results[0]
     assert "prompt_tokens" in results[0]
-    assert results[0]["text"].startswith("Once upon a time")
+    text_result = results[0]["text"]
+    assert isinstance(text_result, str)
+    assert text_result.startswith("Once upon a time")

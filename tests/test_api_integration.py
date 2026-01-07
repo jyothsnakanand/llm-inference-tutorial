@@ -30,9 +30,7 @@ def mock_engine() -> Generator[MagicMock, None, None]:
         yield mock
 
 
-def test_generate_endpoint_with_mocked_engine(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_generate_endpoint_with_mocked_engine(client: TestClient, mock_engine: MagicMock) -> None:
     """Test the generate endpoint with a mocked engine."""
     response = client.post(
         "/generate",
@@ -57,9 +55,7 @@ def test_generate_endpoint_with_mocked_engine(
     mock_engine.generate.assert_called_once()
 
 
-def test_generate_endpoint_multiple_sequences(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_generate_endpoint_multiple_sequences(client: TestClient, mock_engine: MagicMock) -> None:
     """Test generating multiple sequences."""
     mock_engine.generate.return_value = [
         {"text": "Once upon a time there was a knight.", "tokens": 8, "prompt_tokens": 4},
@@ -93,9 +89,7 @@ def test_generate_endpoint_model_not_loaded(client: TestClient) -> None:
         assert "Model not loaded" in response.json()["detail"]
 
 
-def test_generate_endpoint_generation_error(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_generate_endpoint_generation_error(client: TestClient, mock_engine: MagicMock) -> None:
     """Test error handling during generation."""
     mock_engine.generate.side_effect = RuntimeError("Generation failed")
 
@@ -127,24 +121,27 @@ def test_rate_limiting(client: TestClient, mock_engine: MagicMock) -> None:
 def test_global_exception_handler() -> None:
     """Test global exception handler with isolated client."""
     # Create an isolated test client after rate limit tests
-    with TestClient(app) as isolated_client:
-        with patch("src.main.engine") as mock:
-            mock.is_loaded.return_value = True
-            mock.generate.side_effect = Exception("Unexpected error")
+    with (
+        TestClient(app) as isolated_client,
+        patch("src.main.engine") as mock,
+    ):
+        mock.is_loaded.return_value = True
+        mock.generate.side_effect = Exception("Unexpected error")
 
-            # Wait briefly to avoid hitting rate limit
-            import time
-            time.sleep(0.1)
+        # Wait briefly to avoid hitting rate limit
+        import time
 
-            response = isolated_client.post(
-                "/generate",
-                json={"prompt": "test"},
-            )
+        time.sleep(0.1)
 
-            # Should get 500 error, not 429 rate limit
-            if response.status_code == 429:
-                # If still rate limited, skip this test
-                pytest.skip("Rate limit still active")
+        response = isolated_client.post(
+            "/generate",
+            json={"prompt": "test"},
+        )
 
-            assert response.status_code == 500
-            assert "error" in response.json()
+        # Should get 500 error, not 429 rate limit
+        if response.status_code == 429:
+            # If still rate limited, skip this test
+            pytest.skip("Rate limit still active")
+
+        assert response.status_code == 500
+        assert "error" in response.json()
