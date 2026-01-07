@@ -14,9 +14,12 @@ COPY pyproject.toml README.md ./
 COPY src/ ./src/
 
 # Install dependencies to a virtual environment
+# Use CPU-only PyTorch to reduce image size
 RUN uv venv /opt/venv && \
     . /opt/venv/bin/activate && \
-    uv pip install -e .
+    uv pip install torch --index-url https://download.pytorch.org/whl/cpu && \
+    uv pip install -e . && \
+    rm -rf /root/.cache/uv
 
 # Stage 2: Runtime
 FROM python:3.11-slim
